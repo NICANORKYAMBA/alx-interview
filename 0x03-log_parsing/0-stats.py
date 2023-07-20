@@ -7,21 +7,24 @@ Created on Thur July 20 15:00:00 2023
 """
 import sys
 
-STATUSES = {'200': 0, '301': 0, '400': 0,
-            '401': 0, '403': 0, '404': 0,
-            '405': 0, '500': 0}
-
 
 def print_stats(file_size, status_counts):
     """
-    Print the number of status code and the file size
+    Prints the status code and the number of requests for
+    that code
 
-    Args:
-        file_size (int): file size
-        status_counts (dict): status counts
+    Parameters
+    ----------
+    file_size : int
+        The size of the file in bytes
+    status_counts : dict
+        A dictionary where the keys are the status codes
+        and the values are the number of requests for
+        that code
 
-    Returns:
-        None
+    Returns
+    -------
+    None
     """
     print('File size: {:d}'.format(file_size))
     for status in sorted(status_counts.keys()):
@@ -30,26 +33,31 @@ def print_stats(file_size, status_counts):
 
 
 if __name__ == '__main__':
-    file_size = 0
+    status_counts = {'200': 0, '301': 0, '400': 0,
+                     '401': 0, '403': 0, '404': 0,
+                     '405': 0, '500': 0}
     line_count = 0
-    status_counts = STATUSES.copy()
+    file_size = 0
 
     try:
         for line in sys.stdin:
-            line_parts = line.split()
-            if len(line_parts) != 9:
-                continue
+            if line_count != 0 and line_count % 10 == 0:
+                print_stats(file_size, status_counts)
 
-            status_code = line_parts[-2]
+            status_list = line.split()
+            line_count += 1
+
             try:
-                file_size += int(line_parts[-1])
-                status_counts[status_code] += 1
-            except ValueError:
+                file_size += int(status_list[-1])
+            except Exception:
                 pass
 
-            line_count += 1
-            if line_count % 10 == 0:
-                print_stats(file_size, status_counts)
+            try:
+                if status_list[-2] in status_counts:
+                    status_counts[status_list[-2]] += 1
+            except Exception:
+                pass
+            print_stats(file_size, status_counts)
 
     except KeyboardInterrupt:
         print_stats(file_size, status_counts)
