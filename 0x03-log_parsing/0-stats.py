@@ -7,7 +7,9 @@ Created on Thur July 20 15:00:00 2023
 """
 import sys
 
-STATUSES = ['200', '301', '400', '401', '403', '404', '405', '500']
+STATUSES = {'200': 0, '301': 0, '400': 0,
+            '401': 0, '403': 0, '404': 0,
+            '405': 0, '500': 0}
 
 
 def print_stats(file_size, status_counts):
@@ -28,60 +30,42 @@ def print_stats(file_size, status_counts):
     -------
     None
     """
-    print(f'File size: {file_size}')
-    for status in sorted(status_counts):
-        count = status_counts[status]
-        print(f'{status}: {count}')
+    print('File size: {:d}'.format(file_size))
+    for status in sorted(status_counts.keys()):
+        if status_counts[status] != 0:
+            print('{}: {:d}'.format(status, status_counts[status]))
 
 
-def parse_line(line):
-    """
-    Parses a line from the file
+def process_line(line, file_size, status_counts):
+    line_parts = line.split()
+    if len(line_parts) != 9:
+        return
 
-    Parameters
-    ----------
-    line : str
-        A line from the file
+    status_code = line_parts[-2]
+    try:
+        file_size += int(line_parts[-1])
+        status_counts[status_code] += 1
+    except ValueError:
+        pass
 
-    Returns
-    -------
-    int
-        The size of the file in bytes
-    """
-    parts = line.split()
-    if len(parts) != 9:
-        return None, None
-    ip, _, _, status, size = parts[:5]
-    if not status.isdigit() or status not in STATUSES:
-        return None, None
-    return ip, int(size)
+    return file_size, status_counts
 
 
-def main():
-    """
-    Main function
-    """
+if __name__ == '__main__':
     file_size = 0
-    status_counts = {status: 0 for status in STATUSES}
+    status_counts = STATUSES.copy()
     line_count = 0
 
     try:
         for line in sys.stdin:
-            line = line.strip()
-            ip, size = parse_line(line)
-            if ip is None:
-                continue
-
-            file_size += size
-            status_counts[status] += 1
-
+            file_size, status_counts = process_line(
+                    line.strip(), file_size, status_counts)
             line_count += 1
+
             if line_count % 10 == 0:
                 print_stats(file_size, status_counts)
 
-    except KeyboardInterrupt:
         print_stats(file_size, status_counts)
 
-
-if __name__ == '__main__':
-    main()
+    except KeyboardInterrupt:
+        print_stats(file_size, status_counts)
