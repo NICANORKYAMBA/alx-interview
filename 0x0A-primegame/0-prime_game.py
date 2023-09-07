@@ -9,65 +9,47 @@ Created on Thur Sep  7 10:00:00 2023
 
 def isWinner(x, nums):
     """
-    Find the winner of the game.
+    Function that checks for the winner of the game
 
     Args:
         x (int): The number of rounds
-        nums (list): The list of numbers
+        nums (list): The list of rounds
 
     Returns:
         str: The winner
     """
-    def sieve_eratosthenes(limit):
-        """
-        Sieve of Eratosthenes.
-
-        Args:
-            limit (int): The limit of the sieve
-
-        Returns:
-            list: The list of primes
-        """
-        sieve = [True] * (limit + 1)
-        sieve[0] = sieve[1] = False
-        primes = []
-
-        for current in range(2, limit + 1):
-            if sieve[current]:
-                primes.append(current)
-                for multiple in range(current * current, limit + 1, current):
-                    sieve[multiple] = False
-
-        return primes
-
-    def can_win(round_num, primes):
-        """
-        Check if Maria can win.
-
-        Args:
-            round_num (int): The round number
-            primes (list): The list of primes
-
-        Returns:
-            bool: True if Maria can win, False otherwise
-        """
-        if round_num % 2 == 0:
-            return False
-        for prime in primes:
-            if round_num % prime == 0:
-                return True
-        return False
-
-    if max(nums) <= 1:
+    if not nums or x < 1:
         return None
+    max_num = max(nums)
 
-    primes = sieve_eratosthenes(max(nums))
-    maria_wins = sum(1 for round_num in nums if can_win(round_num, primes))
-    ben_wins = len(nums) - maria_wins
+    # Create a filter to mark prime numbers
+    my_filter = [True for _ in range(max(max_num + 1, 2))]
 
-    if maria_wins > ben_wins:
+    # Use the Sieve of Eratosthenes to mark non-prime numbers
+    for i in range(2, int(pow(max_num, 0.5)) + 1):
+        if not my_filter[i]:
+            continue
+        for j in range(i * i, max_num + 1, i):
+            my_filter[j] = False
+
+    # Mark 0 and 1 as non-prime
+    my_filter[0] = my_filter[1] = False
+
+    # Count the cumulative prime numbers
+    y = 0
+    for i in range(len(my_filter)):
+        if my_filter[i]:
+            y += 1
+        my_filter[i] = y
+
+    # Calculate the number of rounds won by Player 1 (Maria)
+    player1 = 0
+    for round_num in nums:
+        player1 += my_filter[round_num] % 2 == 1
+
+    # Determine the winner
+    if player1 * 2 == len(nums):
+        return None
+    if player1 * 2 > len(nums):
         return "Maria"
-    elif ben_wins > maria_wins:
-        return "Ben"
-    else:
-        return None
+    return "Ben"
